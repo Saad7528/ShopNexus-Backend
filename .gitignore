@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS Files
+.DS_Store
+
+# Project rules & system documentation (Private - Never commit)
+PROJECT_RULES.md
+SETUP_REPORT.md
+SETUP_REPORT_BN.md
+.agents/
+*.rules.md
