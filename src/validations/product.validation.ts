@@ -38,7 +38,7 @@ export const productQuerySchema = z.object({
   sortBy: z.enum(['price_asc', 'price_desc', 'rating', 'newest']).optional().default('newest'),
   isFlashSale: z.string().optional(),
 });
-
+//Added a zod schema for creating a review
 export const createReviewSchema = z.object({
   productId: z.string().min(1, 'Product ID is required'),
   rating: z.number().int().min(1).max(5),
