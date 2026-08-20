@@ -5,6 +5,12 @@ import { Coupon } from '../models/Coupon';
 import { Order } from '../models/Order';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 
+/**
+ * Retrieves aggregate platform metrics for admin dashboard.
+ * Includes user counts, inventory counts, low-stock thresholds, and revenue trends.
+ * @route GET /api/v1/admin/metrics
+ * @access Private (Admin)
+ */
 export const getAdminMetrics = async (
   req: AuthenticatedRequest,
   res: Response
@@ -57,6 +63,11 @@ export const getAdminMetrics = async (
   }
 };
 
+/**
+ * Retrieves all customer orders populated with user details for admin fulfillment tracking.
+ * @route GET /api/v1/admin/orders
+ * @access Private (Admin)
+ */
 export const getAllOrdersAdmin = async (
   req: AuthenticatedRequest,
   res: Response
@@ -81,6 +92,12 @@ export const getAllOrdersAdmin = async (
   }
 };
 
+/**
+ * Updates order lifecycle status and payment status by order ID.
+ * Validates allowed status state machine transitions before database update.
+ * @route PATCH /api/v1/admin/orders/:id/status
+ * @access Private (Admin)
+ */
 export const updateOrderStatusAdmin = async (
   req: AuthenticatedRequest,
   res: Response
