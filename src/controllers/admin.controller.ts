@@ -5,6 +5,12 @@ import { Coupon } from '../models/Coupon';
 import { Order } from '../models/Order';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 
+/**
+ * Retrieves aggregate platform metrics for admin dashboard.
+ * Includes user counts, inventory counts, low-stock thresholds, and revenue trends.
+ * @route GET /api/v1/admin/metrics
+ * @access Private (Admin)
+ */
 export const getAdminMetrics = async (
   req: AuthenticatedRequest,
   res: Response
