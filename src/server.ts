@@ -33,8 +33,10 @@ app.get('/health', (_req: Request, res: Response) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`⚡ [Server]: Running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`⚡ [Server]: Running on port ${PORT}`);
+  });
+}
 
 export default app;
