@@ -25,6 +25,16 @@ connectDB();
 // Mount central API router
 app.use('/api', apiRoutes);
 
+app.get('/', (_req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'ok',
+    service: 'ShopNexus Backend API',
+    environment: process.env.NODE_ENV || 'development',
+    health: '/health',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok',
