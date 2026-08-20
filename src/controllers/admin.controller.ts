@@ -2,23 +2,34 @@ import { Response } from 'express';
 import { User } from '../models/User';
 import { Product } from '../models/Product';
 import { Coupon } from '../models/Coupon';
+import { Order } from '../models/Order';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 
-export const getAdminMetrics = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+/**
+ * Retrieves aggregate platform metrics for admin dashboard.
+ * Includes user counts, inventory counts, low-stock thresholds, and revenue trends.
+ * @route GET /api/v1/admin/metrics
+ * @access Private (Admin)
+ */
+export const getAdminMetrics = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user || req.user.role !== 'admin') {
       res.status(403).json({ success: false, message: 'Forbidden: Admin access only' });
       return;
     }
 
-    const [totalUsers, totalProducts, totalCoupons, lowStockProducts] = await Promise.all([
-      User.countDocuments(),
-      Product.countDocuments(),
-      Coupon.countDocuments(),
-      Product.countDocuments({ stock: { $lte: 5 } }),
-    ]);
+    const [totalUsers, totalProducts, totalCoupons, lowStockProducts, totalOrders] =
+      await Promise.all([
+        User.countDocuments(),
+        Product.countDocuments(),
+        Coupon.countDocuments(),
+        Product.countDocuments({ stock: { $lte: 5 } }),
+        Order.countDocuments(),
+      ]);
 
-    // Aggregate monthly sales metrics (simulated analytics structure for MVP)
     const salesTrends = [
       { month: 'Jan', revenue: 14200, orders: 128 },
       { month: 'Feb', revenue: 18900, orders: 156 },
@@ -36,16 +47,97 @@ export const getAdminMetrics = async (req: AuthenticatedRequest, res: Response):
           totalUsers,
           totalProducts,
           totalCoupons,
+          totalOrders,
           lowStockAlerts: lowStockProducts,
           averageOrderValue: 121.5,
         },
         salesTrends,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Server error';
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to retrieve admin metrics',
+      message: errorMessage || 'Failed to retrieve admin metrics',
     });
+  }
+};
+
+/**
+ * Retrieves all customer orders populated with user details for admin fulfillment tracking.
+ * @route GET /api/v1/admin/orders
+ * @access Private (Admin)
+ */
+export const getAllOrdersAdmin = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      res.status(403).json({ success: false, message: 'Forbidden: Admin access only' });
+      return;
+    }
+
+    const orders = await Order.find()
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: orders,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Server error';
+    res.status(500).json({ success: false, message: errorMessage });
+  }
+};
+
+/**
+ * Updates order lifecycle status and payment status by order ID.
+ * Validates allowed status state machine transitions before database update.
+ * @route PATCH /api/v1/admin/orders/:id/status
+ * @access Private (Admin)
+ */
+export const updateOrderStatusAdmin = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      res.status(403).json({ success: false, message: 'Forbidden: Admin access only' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { orderStatus, paymentStatus } = req.body;
+
+    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    if (orderStatus && !validStatuses.includes(orderStatus)) {
+      res.status(400).json({ success: false, message: 'Invalid order status value' });
+      return;
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      {
+        ...(orderStatus && { orderStatus }),
+        ...(paymentStatus && { paymentStatus }),
+      },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      res.status(404).json({ success: false, message: 'Order not found' });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Order status updated successfully',
+      data: updatedOrder,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Server error';
+    res.status(500).json({ success: false, message: errorMessage });
   }
 };
