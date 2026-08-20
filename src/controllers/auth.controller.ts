@@ -183,3 +183,147 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response): P
     });
   }
 };
+
+export const googleAuth = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, name, avatar, googleId } = req.body;
+
+    if (!email) {
+      res.status(400).json({ success: false, message: 'Google email is required' });
+      return;
+    }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      const salt = await bcrypt.genSalt(10);
+      const dummyPassword = await bcrypt.hash(`google_${googleId || Date.now()}_secret`, salt);
+
+      user = await User.create({
+        name: name || email.split('@')[0],
+        email,
+        passwordHash: dummyPassword,
+        avatar: avatar || '',
+        isEmailVerified: true,
+        role: 'customer',
+      });
+    }
+
+    const token = generateToken({
+      userId: user._id.toString(),
+      _id: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Google login successful',
+      data: { user, token },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to authenticate with Google',
+    });
+  }
+};
+
+export const githubAuth = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      res.status(400).json({ success: false, message: 'Authorization code is required' });
+      return;
+    }
+
+    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: process.env.GITHUB_CLIENT_ID,
+        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        code,
+      }),
+    });
+
+    const tokenData = (await tokenResponse.json()) as any;
+    if (!tokenData.access_token) {
+      throw new Error(tokenData.error_description || 'Failed to exchange GitHub code');
+    }
+
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+        Accept: 'application/json',
+      },
+    });
+
+    const ghUser = (await userResponse.json()) as any;
+    let email = ghUser.email;
+
+    if (!email) {
+      const emailResponse = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+          Accept: 'application/json',
+        },
+      });
+      const emails = (await emailResponse.json()) as any[];
+      const primaryEmail = emails.find((e) => e.primary);
+      email = primaryEmail ? primaryEmail.email : `${ghUser.login}@github.users.shopnexus.com`;
+    }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      const salt = await bcrypt.genSalt(10);
+      const dummyPassword = await bcrypt.hash(`github_${ghUser.id}_secret`, salt);
+
+      user = await User.create({
+        name: ghUser.name || ghUser.login,
+        email,
+        passwordHash: dummyPassword,
+        avatar: ghUser.avatar_url || '',
+        isEmailVerified: true,
+        role: 'customer',
+      });
+    }
+
+    const token = generateToken({
+      userId: user._id.toString(),
+      _id: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'GitHub login successful',
+      data: { user, token },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to authenticate with GitHub',
+    });
+  }
+};
