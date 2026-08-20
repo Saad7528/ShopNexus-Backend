@@ -63,6 +63,11 @@ export const getAdminMetrics = async (
   }
 };
 
+/**
+ * Retrieves all customer orders populated with user details for admin fulfillment tracking.
+ * @route GET /api/v1/admin/orders
+ * @access Private (Admin)
+ */
 export const getAllOrdersAdmin = async (
   req: AuthenticatedRequest,
   res: Response
@@ -87,6 +92,12 @@ export const getAllOrdersAdmin = async (
   }
 };
 
+/**
+ * Updates order lifecycle status and payment status by order ID.
+ * Validates allowed status state machine transitions before database update.
+ * @route PATCH /api/v1/admin/orders/:id/status
+ * @access Private (Admin)
+ */
 export const updateOrderStatusAdmin = async (
   req: AuthenticatedRequest,
   res: Response
