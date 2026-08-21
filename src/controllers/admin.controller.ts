@@ -6,7 +6,7 @@ import { Order } from '../models/Order';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 
 /**
- * Retrieves aggregate platform metrics for admin dashboard.
+ * Retrieves aggregate platform metrics, real-time inventory counts, and revenue analytics for admin dashboard.
  * Includes user counts, inventory counts, low-stock thresholds, and revenue trends.
  * @route GET /api/v1/admin/metrics
  * @access Private (Admin)
