@@ -14,6 +14,8 @@ const router: Router = Router();
 
 // GET /api/v1/admin/metrics - Overview dashboard metrics & revenue analytics
 router.get('/metrics', requireAuth, requireRole(['admin']), getAdminMetrics);
+router.get('/orders', requireAuth, requireRole(['admin']), getAllOrdersAdmin);
+router.patch('/orders/:id/status', requireAuth, requireRole(['admin']), updateOrderStatusAdmin);
 
 // GET /api/v1/admin/orders - Fetch all orders for fulfillment management
 router.get('/orders', requireAuth, requireRole(['admin']), getAllOrdersAdmin);
