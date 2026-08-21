@@ -4,6 +4,7 @@ import { UserRole } from '../models/User';
 
 export interface AuthPayload {
   userId: string;
+  _id?: string;
   email: string;
   role: UserRole;
 }
@@ -31,6 +32,9 @@ export const requireAuth = (req: AuthenticatedRequest, res: Response, next: Next
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
+    if (!decoded._id && decoded.userId) {
+      decoded._id = decoded.userId;
+    }
     req.user = decoded;
     next();
   } catch (_error) {
