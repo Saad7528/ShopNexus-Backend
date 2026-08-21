@@ -11,6 +11,10 @@ export interface IUser extends Document {
   isEmailVerified: boolean;
   storeName?: string;
   storeDescription?: string;
+  storeBanner?: string;
+  storeLogo?: string;
+  supportEmail?: string;
+  supportPhone?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,6 +58,22 @@ const userSchema = new Schema<IUser>(
       trim: true,
     },
     storeDescription: {
+      type: String,
+      trim: true,
+    },
+    storeBanner: {
+      type: String,
+      trim: true,
+    },
+    storeLogo: {
+      type: String,
+      trim: true,
+    },
+    supportEmail: {
+      type: String,
+      trim: true,
+    },
+    supportPhone: {
       type: String,
       trim: true,
     },
