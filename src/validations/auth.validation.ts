@@ -17,6 +17,11 @@ export const loginSchema = z.object({
 export const updateProfileSchema = z.object({
   name: z.string().min(2).max(50).optional(),
   avatar: z.string().url().optional().or(z.literal('')),
+  phoneNumber: z.string().optional().or(z.literal('')),
+  address: z.string().optional().or(z.literal('')),
+  city: z.string().optional().or(z.literal('')),
+  zipCode: z.string().optional().or(z.literal('')),
+  country: z.string().optional().or(z.literal('')),
   storeName: z.string().optional(),
   storeDescription: z.string().optional(),
 });
