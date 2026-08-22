@@ -8,6 +8,11 @@ export interface IUser extends Document {
   passwordHash: string;
   role: UserRole;
   avatar?: string;
+  phoneNumber?: string;
+  address?: string;
+  city?: string;
+  zipCode?: string;
+  country?: string;
   isEmailVerified: boolean;
   storeName?: string;
   storeDescription?: string;
@@ -15,8 +20,14 @@ export interface IUser extends Document {
   storeLogo?: string;
   supportEmail?: string;
   supportPhone?: string;
+  // Security Features: Account Lockout & Password Reset
+  failedLoginAttempts: number;
+  lockUntil?: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
+  isLocked: boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -49,6 +60,31 @@ const userSchema = new Schema<IUser>(
       type: String,
       default: '',
     },
+    phoneNumber: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    address: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    city: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    zipCode: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    country: {
+      type: String,
+      trim: true,
+      default: 'Bangladesh',
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,
@@ -77,16 +113,37 @@ const userSchema = new Schema<IUser>(
       type: String,
       trim: true,
     },
+    // Security fields
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lockUntil: {
+      type: Date,
+    },
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
   }
 );
 
+// Virtual property to check if account is currently locked
+userSchema.virtual('isLocked').get(function (this: IUser) {
+  return !!(this.lockUntil && this.lockUntil.getTime() > Date.now());
+});
+
 // Method to strip sensitive fields
 userSchema.methods.toJSON = function () {
-  const userObject = this.toObject();
+  const userObject = this.toObject({ virtuals: true });
   delete userObject.passwordHash;
+  delete userObject.resetPasswordToken;
+  delete userObject.resetPasswordExpires;
   delete userObject.__v;
   return userObject;
 };
