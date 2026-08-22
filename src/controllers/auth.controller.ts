@@ -79,13 +79,42 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const isMatch = await bcrypt.compare(validatedData.password, user.passwordHash);
-    if (!isMatch) {
-      res.status(401).json({
+    // 🔒 Security Feature: Account Lockout Check
+    if (user.lockUntil && user.lockUntil.getTime() > Date.now()) {
+      const remainingMinutes = Math.ceil((user.lockUntil.getTime() - Date.now()) / (60 * 1000));
+      res.status(403).json({
         success: false,
-        message: 'Invalid email or password.',
+        message: `Account is temporarily locked due to multiple failed login attempts. Please try again in ${remainingMinutes} minute(s).`,
       });
       return;
+    }
+
+    const isMatch = await bcrypt.compare(validatedData.password, user.passwordHash);
+    if (!isMatch) {
+      // Increment failed attempts
+      user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+
+      // Lock account for 15 minutes after 5 consecutive failed attempts
+      if (user.failedLoginAttempts >= 5) {
+        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+      }
+      await user.save();
+
+      res.status(401).json({
+        success: false,
+        message:
+          user.failedLoginAttempts >= 5
+            ? 'Account has been locked for 15 minutes due to 5 consecutive failed login attempts.'
+            : `Invalid email or password. (${5 - user.failedLoginAttempts} attempts remaining before temporary lockout)`,
+      });
+      return;
+    }
+
+    // Reset failed attempts on successful login
+    if (user.failedLoginAttempts > 0 || user.lockUntil) {
+      user.failedLoginAttempts = 0;
+      user.lockUntil = undefined;
+      await user.save();
     }
 
     const token = generateToken({
@@ -324,6 +353,90 @@ export const githubAuth = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to authenticate with GitHub',
+    });
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ success: false, message: 'Email is required' });
+      return;
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Return 200 to prevent user enumeration attacks
+      res.status(200).json({
+        success: true,
+        message: 'If an account exists with this email, password reset instructions have been generated.',
+      });
+      return;
+    }
+
+    // Generate random 32-character hex reset token
+    const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour validity
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset token generated successfully.',
+      data: {
+        resetToken,
+        expiresIn: '1 hour',
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to process forgot password request',
+    });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword || newPassword.length < 6) {
+      res.status(400).json({
+        success: false,
+        message: 'Valid token and new password (min 6 chars) are required.',
+      });
+      return;
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      res.status(400).json({
+        success: false,
+        message: 'Password reset token is invalid or has expired.',
+      });
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    user.failedLoginAttempts = 0;
+    user.lockUntil = undefined;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Password has been successfully reset. You can now login.',
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to reset password',
     });
   }
 };
