@@ -25,7 +25,7 @@ export const updateProfileSchema = z.object({
   storeName: z.string().optional(),
   storeDescription: z.string().optional(),
 });
-
+//Added a zod schema for registering a user
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
