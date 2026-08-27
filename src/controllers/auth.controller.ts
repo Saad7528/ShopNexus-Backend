@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
+import bcrypt = require('bcryptjs');
 import { User } from '../models/User';
 import { registerSchema, loginSchema, updateProfileSchema } from '../validations/auth.validation';
 import { generateToken, AuthenticatedRequest } from '../middlewares/auth.middleware';
