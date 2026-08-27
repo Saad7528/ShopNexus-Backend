@@ -24,6 +24,11 @@ export const updateProfileSchema = z.object({
   country: z.string().optional().or(z.literal('')),
   storeName: z.string().optional(),
   storeDescription: z.string().optional(),
+  nexusCoins: z.number().min(0).optional(),
+  loginStreak: z.number().min(1).optional(),
+  lastVisitDate: z.string().optional(),
+  isVipMember: z.boolean().optional(),
+  vipFirstOrderUsed: z.boolean().optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

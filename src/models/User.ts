@@ -20,6 +20,12 @@ export interface IUser extends Document {
   storeLogo?: string;
   supportEmail?: string;
   supportPhone?: string;
+  // Nexus Coins & Streak VIP Features
+  nexusCoins: number;
+  loginStreak: number;
+  lastVisitDate?: string;
+  isVipMember: boolean;
+  vipFirstOrderUsed: boolean;
   // Security Features: Account Lockout & Password Reset
   failedLoginAttempts: number;
   lockUntil?: Date;
@@ -112,6 +118,29 @@ const userSchema = new Schema<IUser>(
     supportPhone: {
       type: String,
       trim: true,
+    },
+    // Nexus Coins & Streak VIP Features
+    nexusCoins: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    loginStreak: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+    lastVisitDate: {
+      type: String,
+      default: '',
+    },
+    isVipMember: {
+      type: Boolean,
+      default: false,
+    },
+    vipFirstOrderUsed: {
+      type: Boolean,
+      default: false,
     },
     // Security fields
     failedLoginAttempts: {
