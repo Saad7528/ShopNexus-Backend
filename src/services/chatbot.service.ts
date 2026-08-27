@@ -94,13 +94,13 @@ export class ChatbotService {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return null;
 
-    const catalogContext = products.map((p) => `- ${p.title} ($${p.price}, Rating: ${p.rating}★, Cat: ${p.category})`).join('\n');
-    const prompt = `You are ShopNexus AI Shopping Assistant. Be friendly, concise, and helpful. User asks: "${message}". Budget: ${maxBudget ? `$${maxBudget}` : 'Any'}. Available items:\n${catalogContext}\nRecommend the best matching items with prices and direct helpful guidance in 2-3 sentences.`;
+    const catalogContext = products.map((p) => `- ${p.title} (৳${p.price} BDT, Rating: ${p.rating}★, Cat: ${p.category})`).join('\n');
+    const prompt = `You are ShopNexus AI Shopping Assistant in Bangladesh. Be friendly, concise, and helpful. Always quote in Bangladeshi Taka (৳ BDT). User asks: "${message}". Budget: ${maxBudget ? `৳${maxBudget}` : 'Any'}. Available items:\n${catalogContext}\nRecommend the best matching items with prices and direct helpful guidance in 2-3 sentences.`;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
