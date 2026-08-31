@@ -70,6 +70,7 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  connectDB().catch((err) => console.error('Initial DB connect error:', err));
   app.listen(PORT, () => {
     console.log(`⚡ [Server]: Running on port ${PORT}`);
   });

@@ -1,27 +1,34 @@
 import mongoose from 'mongoose';
 
-let isConnected = false;
+let cachedPromise: Promise<typeof mongoose> | null = null;
 
-export const connectDB = async (): Promise<void> => {
-  if (isConnected && mongoose.connection.readyState === 1) {
-    return;
+export const connectDB = async (): Promise<typeof mongoose | null> => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose;
   }
 
-  try {
-    const mongoURI = process.env.MONGO_URI;
+  const mongoURI = process.env.MONGO_URI;
 
-    if (!mongoURI) {
-      console.warn('⚠️ [MongoDB Warning]: MONGO_URI is not defined in environment variables.');
-      return;
-    }
-
-    const conn = await mongoose.connect(mongoURI, {
-      serverSelectionTimeoutMS: 5000,
-      bufferCommands: false,
-    });
-    isConnected = true;
-    console.log(`🚀 [MongoDB Atlas Connected]: ${conn.connection.host} | DB: ${conn.connection.name}`);
-  } catch (error: any) {
-    console.error(`❌ [MongoDB Atlas Connection Error]: ${error.message}`);
+  if (!mongoURI) {
+    console.warn('⚠️ [MongoDB Warning]: MONGO_URI is not defined in environment variables.');
+    return null;
   }
+
+  if (!cachedPromise) {
+    cachedPromise = mongoose
+      .connect(mongoURI, {
+        serverSelectionTimeoutMS: 10000,
+      })
+      .then((m) => {
+        console.log(`🚀 [MongoDB Atlas Connected]: ${m.connection.host} | DB: ${m.connection.name}`);
+        return m;
+      })
+      .catch((err) => {
+        cachedPromise = null;
+        console.error(`❌ [MongoDB Atlas Connection Error]: ${err.message}`);
+        throw err;
+      });
+  }
+
+  return cachedPromise;
 };
