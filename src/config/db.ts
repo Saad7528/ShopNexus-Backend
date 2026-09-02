@@ -1,4 +1,12 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Fix ISP DNS SRV resolution issues for MongoDB Atlas (+srv://) across team members
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (_e) {
+  // Ignore in environments where setServers is restricted
+}
 
 let cachedPromise: Promise<typeof mongoose> | null = null;
 
