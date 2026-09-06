@@ -3,6 +3,16 @@ import {
   getAdminMetrics,
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
+  getAllUsersAdmin,
+  updateUserRoleAdmin,
+  deleteUserAdmin,
+  getVisitorStatsAdmin,
+  getAbandonedCartsAdmin,
+  sendAbandonedCartCoupon,
+  updateAbandonedCartStatusAdmin,
+  getAllReviewsAdmin,
+  updateReviewStatusAdmin,
+  getLiveTrackingParcelsAdmin,
 } from '../controllers/admin.controller';
 import { requireAuth, requireRole } from '../middlewares/auth.middleware';
 
@@ -12,15 +22,30 @@ import { requireAuth, requireRole } from '../middlewares/auth.middleware';
  */
 const router: Router = Router();
 
-// GET /api/v1/admin/metrics - Overview dashboard metrics & revenue analytics
+// Metrics & Analytics
 router.get('/metrics', requireAuth, requireRole(['admin']), getAdminMetrics);
+router.get('/visitors/stats', requireAuth, requireRole(['admin']), getVisitorStatsAdmin);
+
+// Order Fulfillment Management
 router.get('/orders', requireAuth, requireRole(['admin']), getAllOrdersAdmin);
 router.patch('/orders/:id/status', requireAuth, requireRole(['admin']), updateOrderStatusAdmin);
+router.get('/tracking/parcels', requireAuth, requireRole(['admin']), getLiveTrackingParcelsAdmin);
 
-// GET /api/v1/admin/orders - Fetch all orders for fulfillment management
-router.get('/orders', requireAuth, requireRole(['admin']), getAllOrdersAdmin);
+// Abandoned Cart Recovery
+router.get('/abandoned-carts', requireAuth, requireRole(['admin']), getAbandonedCartsAdmin);
+router.post('/abandoned-carts/:id/recover', requireAuth, requireRole(['admin']), sendAbandonedCartCoupon);
+router.patch('/abandoned-carts/:id/status', requireAuth, requireRole(['admin']), updateAbandonedCartStatusAdmin);
 
-// PATCH /api/v1/admin/orders/:id/status - Update order status state machine
-router.patch('/orders/:id/status', requireAuth, requireRole(['admin']), updateOrderStatusAdmin);
+
+// Review Moderation
+router.get('/reviews', requireAuth, requireRole(['admin']), getAllReviewsAdmin);
+router.patch('/reviews/:id/status', requireAuth, requireRole(['admin']), updateReviewStatusAdmin);
+
+// User & Role Management
+router.get('/users', requireAuth, requireRole(['admin']), getAllUsersAdmin);
+router.patch('/users/:id/role', requireAuth, requireRole(['admin']), updateUserRoleAdmin);
+router.delete('/users/:id', requireAuth, requireRole(['admin']), deleteUserAdmin);
 
 export default router;
+
+

@@ -45,6 +45,22 @@ export const requireAuth = (req: AuthenticatedRequest, res: Response, next: Next
   }
 };
 
+export const optionalAuth = (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
+  try {
+    const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
+    if (token) {
+      const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
+      if (!decoded._id && decoded.userId) {
+        decoded._id = decoded.userId;
+      }
+      req.user = decoded;
+    }
+  } catch (_error) {
+    // Gracefully proceed as guest if token is missing or invalid
+  }
+  next();
+};
+
 export const requireRole = (roles: UserRole[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
@@ -66,3 +82,4 @@ export const requireRole = (roles: UserRole[]) => {
     next();
   };
 };
+
