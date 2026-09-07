@@ -138,3 +138,39 @@ export const getActiveCoupons = async (_req: Request, res: Response): Promise<vo
     res.status(500).json({ success: false, message: error.message || 'Failed to fetch coupons' });
   }
 };
+
+export const getAllCouponsAdmin = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      res.status(403).json({ success: false, message: 'Admin access required' });
+      return;
+    }
+
+    const coupons = await Coupon.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: { coupons } });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to fetch coupons' });
+  }
+};
+
+export const deleteCoupon = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      res.status(403).json({ success: false, message: 'Admin access required' });
+      return;
+    }
+
+    const { id } = req.params;
+    const deleted = await Coupon.findByIdAndDelete(id);
+
+    if (!deleted) {
+      res.status(404).json({ success: false, message: 'Coupon not found' });
+      return;
+    }
+
+    res.status(200).json({ success: true, message: 'Coupon deleted successfully' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to delete coupon' });
+  }
+};
+

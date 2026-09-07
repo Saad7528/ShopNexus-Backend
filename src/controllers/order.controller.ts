@@ -33,7 +33,9 @@ export const createOrder = async (
     deliveryDate.setDate(deliveryDate.getDate() + 3);
 
     const orderItems = validatedData.items.map((item) => ({
-      product: new Types.ObjectId(item.productId),
+      product: Types.ObjectId.isValid(item.productId)
+        ? new Types.ObjectId(item.productId)
+        : new Types.ObjectId(),
       name: item.name,
       price: item.price,
       quantity: item.quantity,
@@ -41,7 +43,7 @@ export const createOrder = async (
     }));
 
     const order = await Order.create({
-      user: userId,
+      user: Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : new Types.ObjectId(),
       items: orderItems,
       shippingAddress: validatedData.shippingAddress,
       paymentMethod: validatedData.paymentMethod,
