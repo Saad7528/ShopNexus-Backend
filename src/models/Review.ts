@@ -8,6 +8,8 @@ export interface IReview extends Document {
   rating: number;
   comment: string;
   isVerifiedPurchase: boolean;
+  status: 'approved' | 'pending' | 'rejected';
+  helpfulVotes?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +23,8 @@ const reviewSchema = new Schema<IReview>(
     rating: { type: Number, required: true, min: 1, max: 5 },
     comment: { type: String, required: true, trim: true, maxlength: 1000 },
     isVerifiedPurchase: { type: Boolean, default: true },
+    status: { type: String, enum: ['approved', 'pending', 'rejected'], default: 'approved', index: true },
+    helpfulVotes: { type: Number, default: 0 },
   },
   {
     timestamps: true,
@@ -31,3 +35,4 @@ const reviewSchema = new Schema<IReview>(
 reviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
 
 export const Review = model<IReview>('Review', reviewSchema);
+

@@ -269,7 +269,7 @@ const PRODUCTS_DATA = [
     price: 149,
     discountPrice: 129,
     stock: 19,
-    images: ['https://images.unsplash.com/photo-1612287233207-6819b52a5598?w=800&q=80'],
+    images: ['https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80'],
     vendorName: 'Nexus Direct',
     isFlashSale: false,
     averageRating: 4.9,
