@@ -11,6 +11,7 @@ import chatbotRoutes from './chatbot.routes';
 import visualSearchRoutes from './visual-search.routes';
 import recommendationRoutes from './recommendation.routes';
 import notificationRoutes from './notification.routes';
+import telemetryRoutes from './telemetry.routes';
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.use('/admin', adminRoutes);
 router.use('/vendors', vendorRoutes);
 router.use('/orders', orderRoutes);
 router.use('/wishlist', wishlistRoutes);
+router.use('/telemetry', telemetryRoutes);
 
 // Advanced AI & Notification Ecosystem (Features 9, 10, 11, 12)
 router.use('/ai', chatbotRoutes);
