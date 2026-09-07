@@ -75,8 +75,11 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
 
 export const getProductBySlug = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { slug } = req.params;
-    const product = await Product.findOne({ slug, isActive: true });
+    const slug = String(req.params.slug);
+    const isObjectId = slug.match(/^[0-9a-fA-F]{24}$/);
+    const product = isObjectId
+      ? await Product.findOne({ $or: [{ _id: slug }, { slug }], isActive: true })
+      : await Product.findOne({ slug, isActive: true });
 
     if (!product) {
       res.status(404).json({ success: false, message: 'Product not found' });
@@ -107,14 +110,15 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response): P
       return;
     }
 
-    const validatedData = createProductSchema.parse(req.body);
-    const slug = validatedData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString().slice(-4);
+    const title = req.body.title || req.body.name;
+    const slug = req.body.slug || (title ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString().slice(-4) : 'prod-' + Date.now());
 
     const product = await Product.create({
-      ...validatedData,
+      ...req.body,
+      title,
       slug,
       vendorId: req.user.userId,
-      vendorName: req.user.email.split('@')[0],
+      vendorName: req.body.vendorName || req.user.email.split('@')[0] || 'ShopNexus Official',
     });
 
     res.status(201).json({
@@ -123,11 +127,66 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response): P
       data: { product },
     });
   } catch (error: any) {
-    if (error.name === 'ZodError') {
-      res.status(400).json({ success: false, message: 'Validation failed', errors: error.errors });
+    res.status(500).json({ success: false, message: error.message || 'Failed to create product' });
+  }
+};
+
+export const updateProduct = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || (req.user.role !== 'vendor' && req.user.role !== 'admin')) {
+      res.status(403).json({ success: false, message: 'Only vendors or admins can update products' });
       return;
     }
-    res.status(500).json({ success: false, message: error.message || 'Failed to create product' });
+
+    const id = String(req.params.id);
+    const isObjectId = id.match(/^[0-9a-fA-F]{24}$/);
+    const query = isObjectId ? { $or: [{ _id: id }, { slug: id }] } : { slug: id };
+
+    const updatedProduct = await Product.findOneAndUpdate(
+      query,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProduct) {
+      res.status(404).json({ success: false, message: 'Product not found for update' });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Product updated successfully',
+      data: { product: updatedProduct },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to update product' });
+  }
+};
+
+export const deleteProduct = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || (req.user.role !== 'vendor' && req.user.role !== 'admin')) {
+      res.status(403).json({ success: false, message: 'Only vendors or admins can delete products' });
+      return;
+    }
+
+    const id = String(req.params.id);
+    const isObjectId = id.match(/^[0-9a-fA-F]{24}$/);
+    const query = isObjectId ? { $or: [{ _id: id }, { slug: id }] } : { slug: id };
+
+    const deleted = await Product.findOneAndDelete(query);
+
+    if (!deleted) {
+      res.status(404).json({ success: false, message: 'Product not found for deletion' });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Product deleted successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to delete product' });
   }
 };
 
