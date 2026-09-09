@@ -209,7 +209,7 @@ const PRODUCTS_DATA = [
     tags: ['trackpad', 'apple', 'minimalist', 'computing'],
   },
 
-  // --- ELECTRONICS & GADGETS (6 Items) ---
+  // --- ELECTRONICS & GADGETS(6 Items) --- //
   {
     title: 'Anker Prime 27,650mAh 250W Multi-Device Power Bank',
     slug: 'anker-prime-250w-powerbank',
