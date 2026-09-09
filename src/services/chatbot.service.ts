@@ -74,7 +74,7 @@ export class ChatbotService {
         };
       }
     } catch (groqError: any) {
-      console.warn(`⚠️ [AI Fallback Triggered]: Groq API unavailable (${groqError.message}). Switching to Catalog Engine...`);
+      console.warn(` [AI Fallback Triggered]: Groq API unavailable (${groqError.message}). Switching to Catalog Engine...`);
     }
 
     // Tertiary Resilient Fallback: Built-in E-Commerce Context Engine

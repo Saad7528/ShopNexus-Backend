@@ -5,8 +5,6 @@ node_modules/
 dist/
 
 # Environment
-.env
-.env.local
 .env.*.local
 
 # Logs
@@ -24,3 +22,4 @@ SETUP_REPORT.md
 SETUP_REPORT_BN.md
 .agents/
 *.rules.md
+config.bat
