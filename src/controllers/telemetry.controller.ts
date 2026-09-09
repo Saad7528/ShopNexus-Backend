@@ -32,11 +32,11 @@ export interface BackendLiveSession {
 // In-Memory Live Session Store
 const liveSessionsMap = new Map<string, BackendLiveSession>();
 
-// Cleanup inactive sessions older than 35 seconds
+// Cleanup inactive sessions older than 10 seconds for real-time live accuracy
 const cleanupInactiveSessions = () => {
   const now = Date.now();
   for (const [id, session] of liveSessionsMap.entries()) {
-    if (now - session.lastPingTimestamp > 35000) {
+    if (now - session.lastPingTimestamp > 10000 || session.status === 'idle') {
       liveSessionsMap.delete(id);
     }
   }
@@ -52,18 +52,25 @@ export const recordHeartbeat = async (req: Request, res: Response): Promise<void
       sessionId,
       pathname = '/',
       device = 'Desktop',
-      deviceModel = 'MacBook Pro 16" (Apple Silicon)',
-      os = 'macOS Sonoma',
-      browser = 'Google Chrome 124',
+      deviceModel = 'MacBook Pro / PC',
+      os = 'macOS / Windows',
+      browser = 'Google Chrome',
       userName,
       contactPhone,
       cartCount = 0,
       cartTotal = 0,
       referrer = 'Direct Storefront Visit',
+      status = 'active',
     } = req.body;
 
     if (!sessionId) {
       res.status(400).json({ success: false, message: 'Session ID is required' });
+      return;
+    }
+
+    if (status === 'idle') {
+      liveSessionsMap.delete(sessionId);
+      res.status(200).json({ success: true, message: 'Session marked idle' });
       return;
     }
 
@@ -85,6 +92,7 @@ export const recordHeartbeat = async (req: Request, res: Response): Promise<void
       existing.durationSeconds += Math.max(1, Math.min(25, elapsed));
       existing.lastPingTimestamp = now;
       existing.lastActiveAt = 'Live Now';
+      existing.status = 'active';
       if (isNewPage) existing.pageviews += 1;
       if (userName) existing.customerName = `${userName} (Active Customer)`;
       if (contactPhone) existing.contactPhone = contactPhone;
