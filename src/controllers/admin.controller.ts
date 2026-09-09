@@ -378,7 +378,7 @@ export const getAbandonedCartsAdmin = async (
         id: c._id.toString(),
         customerName: c.userId?.name || c.customerName || 'Guest Shopper',
         customerEmail: c.userId?.email || c.customerEmail || 'shopper@tempmail.io',
-        customerPhone: c.userId?.phoneNumber || c.customerPhone || '+880 1700-000000',
+        customerPhone: c.userId?.phoneNumber || (c.customerPhone && !c.customerPhone.includes('1700-000000') ? c.customerPhone : ''),
         items,
         cartTotal: Number(c.total) || Number(c.subtotal) || 0,
         timeAgo: formatRelativeTime(c.updatedAt),
@@ -414,7 +414,7 @@ export const sendAbandonedCartCoupon = async (
     }
 
     const { id } = req.params;
-    const { discountCode, status = 'WhatsApp Sent' } = req.body;
+    const { discountCode, customerPhone, status = 'WhatsApp Sent' } = req.body;
 
     const cart = await Cart.findById(id);
     if (!cart) {
@@ -425,6 +425,9 @@ export const sendAbandonedCartCoupon = async (
     cart.status = status as any;
     if (discountCode) {
       cart.recoveryDiscountCode = discountCode;
+    }
+    if (customerPhone) {
+      cart.customerPhone = customerPhone;
     }
     await cart.save();
 
