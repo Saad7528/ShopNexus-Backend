@@ -79,6 +79,15 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // 🚨 Security Feature: Fraud Detection Account Restriction
+    if (user.isFlaggedFraud) {
+      res.status(403).json({
+        success: false,
+        message: 'This account has been suspended due to security and fraud detection policies. Please contact support.',
+      });
+      return;
+    }
+
     // 🔒 Security Feature: Account Lockout Check
     if (user.lockUntil && user.lockUntil.getTime() > Date.now()) {
       const remainingMinutes = Math.ceil((user.lockUntil.getTime() - Date.now()) / (60 * 1000));
