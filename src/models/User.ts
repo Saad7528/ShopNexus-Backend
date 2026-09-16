@@ -34,6 +34,7 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   isLocked: boolean;
+  isFlaggedFraud: boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -155,6 +156,10 @@ const userSchema = new Schema<IUser>(
     },
     resetPasswordExpires: {
       type: Date,
+    },
+    isFlaggedFraud: {
+      type: Boolean,
+      default: false,
     },
   },
   {
