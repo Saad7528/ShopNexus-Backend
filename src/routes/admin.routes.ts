@@ -13,6 +13,8 @@ import {
   getAllReviewsAdmin,
   updateReviewStatusAdmin,
   getLiveTrackingParcelsAdmin,
+  toggleUserFraudStatusAdmin,
+  createStaffAdmin,
 } from '../controllers/admin.controller';
 import { requireAuth, requireRole } from '../middlewares/auth.middleware';
 
@@ -43,6 +45,8 @@ router.patch('/reviews/:id/status', requireAuth, requireRole(['admin']), updateR
 
 // User & Role Management
 router.get('/users', requireAuth, requireRole(['admin']), getAllUsersAdmin);
+router.post('/users/staff', requireAuth, requireRole(['admin']), createStaffAdmin);
+router.patch('/users/:id/fraud-status', requireAuth, requireRole(['admin']), toggleUserFraudStatusAdmin);
 router.patch('/users/:id/role', requireAuth, requireRole(['admin']), updateUserRoleAdmin);
 router.delete('/users/:id', requireAuth, requireRole(['admin']), deleteUserAdmin);
 
