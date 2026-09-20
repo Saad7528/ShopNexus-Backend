@@ -150,8 +150,45 @@ ShopNexus-Backend/
 
 ---
 
-## 📜 License & Author
+## 👥 Core Team & Contributors (HEXADEVS)
+
+<table align="center">
+  <tr>
+    <td align="center" width="25%">
+      <a href="https://github.com/Saad7528">
+        <img src="https://github.com/Saad7528.png?size=100" width="80px;" alt="S.M. Amirul Islam Saad" style="border-radius:50%;"/><br />
+        <sub><b>S.M. Amirul Islam Saad</b></sub>
+      </a><br />
+      <a href="https://github.com/Saad7528">@Saad7528</a>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/md-shahriar-kabir">
+        <img src="https://github.com/md-shahriar-kabir.png?size=100" width="80px;" alt="Md. Shahriar Kabir" style="border-radius:50%;"/><br />
+        <sub><b>Md. Shahriar Kabir</b></sub>
+      </a><br />
+      <a href="https://github.com/md-shahriar-kabir">@md-shahriar-kabir</a>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/Asmual">
+        <img src="https://github.com/Asmual.png?size=100" width="80px;" alt="Asmual Hossain" style="border-radius:50%;"/><br />
+        <sub><b>Asmual Hossain</b></sub>
+      </a><br />
+      <a href="https://github.com/Asmual">@Asmual</a>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/saikot05">
+        <img src="https://github.com/saikot05.png?size=100" width="80px;" alt="Saikot Hossain" style="border-radius:50%;"/><br />
+        <sub><b>Saikot Hossain</b></sub>
+      </a><br />
+      <a href="https://github.com/saikot05">@saikot05</a>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 📜 License & Credits
 
 Distributed under the **MIT License**.
 
-Developed with ❤️ by **[S.M. Amirul Islam Saad](https://github.com/Saad7528)**.
+Crafted with ❤️ by the **HEXADEVS** Team.
