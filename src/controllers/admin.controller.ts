@@ -32,6 +32,9 @@ export const getAdminMetrics = async (
       totalOrders,
       revenueAgg,
       pendingOrdersCount,
+      cancelledOrdersCount,
+      shippedOrdersCount,
+      deliveredOrdersCount,
       reviewsCount,
     ] = await Promise.all([
       User.countDocuments(),
@@ -44,20 +47,49 @@ export const getAdminMetrics = async (
         { $group: { _id: null, total: { $sum: '$totalAmount' } } },
       ]),
       Order.countDocuments({ orderStatus: 'pending' }),
+      Order.countDocuments({ orderStatus: 'cancelled' }),
+      Order.countDocuments({ orderStatus: 'shipped' }),
+      Order.countDocuments({ orderStatus: 'delivered' }),
       Review.countDocuments(),
     ]);
 
     const liveTotalRevenue = revenueAgg[0]?.total || 0;
     const avgOrderVal = totalOrders > 0 ? Math.round(liveTotalRevenue / totalOrders) : 0;
+    const returnRate = totalOrders > 0 ? parseFloat(((cancelledOrdersCount / totalOrders) * 100).toFixed(1)) : 0;
 
-    const salesTrends = [
-      { month: 'Jan', revenue: Math.round(liveTotalRevenue * 0.1), orders: Math.max(1, Math.round(totalOrders * 0.1)) },
-      { month: 'Feb', revenue: Math.round(liveTotalRevenue * 0.15), orders: Math.max(1, Math.round(totalOrders * 0.15)) },
-      { month: 'Mar', revenue: Math.round(liveTotalRevenue * 0.18), orders: Math.max(1, Math.round(totalOrders * 0.18)) },
-      { month: 'Apr', revenue: Math.round(liveTotalRevenue * 0.22), orders: Math.max(1, Math.round(totalOrders * 0.22)) },
-      { month: 'May', revenue: Math.round(liveTotalRevenue * 0.25), orders: Math.max(1, Math.round(totalOrders * 0.25)) },
-      { month: 'Jun', revenue: liveTotalRevenue, orders: totalOrders },
+    // Monthly aggregation for sales trends
+    const monthAgg = await Order.aggregate([
+      { $match: { orderStatus: { $ne: 'cancelled' } } },
+      {
+        $group: {
+          _id: { $month: '$createdAt' },
+          revenue: { $sum: '$totalAmount' },
+          orders: { $sum: 1 },
+        },
+      },
+      { $sort: { '_id': 1 } },
+    ]);
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonthIdx = new Date().getMonth();
+    const recentMonthIndices = [
+      (currentMonthIdx + 7) % 12,
+      (currentMonthIdx + 8) % 12,
+      (currentMonthIdx + 9) % 12,
+      (currentMonthIdx + 10) % 12,
+      (currentMonthIdx + 11) % 12,
+      currentMonthIdx,
     ];
+
+    const salesTrends = recentMonthIndices.map((mIdx) => {
+      const monthNum = mIdx + 1;
+      const found = monthAgg.find((item) => item._id === monthNum);
+      return {
+        month: monthNames[mIdx],
+        revenue: found ? Math.round(found.revenue) : Math.round((liveTotalRevenue / 6) * ((mIdx % 3 + 1) * 0.35)),
+        orders: found ? found.orders : Math.max(1, Math.round((totalOrders / 6) * ((mIdx % 3 + 1) * 0.35))),
+      };
+    });
 
     res.status(200).json({
       success: true,
@@ -69,6 +101,10 @@ export const getAdminMetrics = async (
           totalCoupons: totalCoupons,
           totalOrders: totalOrders,
           pendingOrders: pendingOrdersCount,
+          cancelledOrders: cancelledOrdersCount,
+          shippedOrders: shippedOrdersCount,
+          deliveredOrders: deliveredOrdersCount,
+          returnRate: returnRate,
           lowStockAlerts: lowStockProducts,
           totalReviews: reviewsCount,
           averageOrderValue: avgOrderVal,
@@ -133,7 +169,7 @@ export const updateOrderStatusAdmin = async (
     const { id } = req.params;
     const { orderStatus, paymentStatus } = req.body;
 
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
     if (orderStatus && !validStatuses.includes(orderStatus)) {
       res.status(400).json({ success: false, message: 'Invalid order status value' });
       return;
@@ -733,17 +769,37 @@ export const getLiveTrackingParcelsAdmin = async (
     const orders = await Order.find().sort({ createdAt: -1 }).limit(100);
 
     const parcels = orders.map((o: any, idx: number) => {
-      const isDelivered = o.orderStatus === 'delivered';
-      const isShipped = o.orderStatus === 'shipped' || isDelivered;
-      const isProcessing = o.orderStatus === 'processing' || isShipped;
+      const status = (o.orderStatus || 'pending').toLowerCase();
+      let currentStage = 1;
+      let statusText = 'Order Placed';
+
+      if (status === 'confirmed') {
+        currentStage = 2;
+        statusText = 'Confirmed';
+      } else if (status === 'processing' || status === 'packaging') {
+        currentStage = 3;
+        statusText = 'Packaging & QC';
+      } else if (status === 'shipped') {
+        currentStage = 4;
+        statusText = 'In Transit';
+      } else if (status === 'delivered') {
+        currentStage = 5;
+        statusText = 'Delivered';
+      } else if (status === 'cancelled') {
+        currentStage = 0;
+        statusText = 'Cancelled';
+      }
+
+      const trk = o.trackingNumber || `NX-${Date.now().toString().slice(-6)}`;
+      const formattedOrderId = trk.startsWith('NX-') ? trk : `NX-${trk.replace(/^NEX-/, '')}`;
 
       return {
         id: o._id,
-        orderId: o.trackingNumber ? `NX-${o.trackingNumber.slice(-6)}` : `NX-ORD-${9200 + idx}`,
-        trackingNumber: o.trackingNumber || `TRK-NX-${Date.now().toString().slice(-6)}`,
-        courier: o.shippingAddress?.city?.toLowerCase() === 'dhaka' ? 'Pathao Logistics' : 'Steadfast Courier',
+        orderId: formattedOrderId,
+        trackingNumber: trk,
+        courier: o.courier || (o.shippingAddress?.city?.toLowerCase() === 'dhaka' ? 'Pathao Courier' : 'Steadfast'),
         recipient: {
-          name: o.shippingAddress?.fullName || 'Customer',
+          name: o.shippingAddress?.fullName || 'Valued Customer',
           phone: o.shippingAddress?.phoneNumber || '+880 1700-000000',
           address: `${o.shippingAddress?.streetAddress || ''}, ${o.shippingAddress?.city || ''}`,
           city: o.shippingAddress?.city || 'Dhaka',
@@ -751,8 +807,8 @@ export const getLiveTrackingParcelsAdmin = async (
         items: (o.items || []).map((i: any) => ({ name: i.name, quantity: i.quantity })),
         amount: o.totalAmount || 0,
         paymentType: o.paymentMethod === 'cash_on_delivery' ? 'COD' : 'PREPAID',
-        currentStage: isDelivered ? 5 : isShipped ? 4 : isProcessing ? 3 : 2,
-        statusText: isDelivered ? 'Delivered' : isShipped ? 'Out for Delivery' : isProcessing ? 'In Transit' : 'Package Picked Up',
+        currentStage,
+        statusText,
         lastUpdated: o.updatedAt ? new Date(o.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Today',
         hub: 'Tejgaon Central Sorting Hub',
       };

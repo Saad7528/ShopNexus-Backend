@@ -146,7 +146,44 @@ export const getAllCouponsAdmin = async (req: AuthenticatedRequest, res: Respons
       return;
     }
 
-    const coupons = await Coupon.find().sort({ createdAt: -1 });
+    let coupons = await Coupon.find().sort({ createdAt: -1 });
+
+    if (coupons.length === 0) {
+      const defaultCoupons = [
+        {
+          code: 'NEXUS10',
+          discountType: 'percentage' as const,
+          discountValue: 10,
+          minPurchaseAmount: 2500,
+          usageLimit: 1000,
+          usedCount: 342,
+          expiryDate: new Date('2026-12-31T23:59:59Z'),
+          isActive: true,
+        },
+        {
+          code: 'FLASH20',
+          discountType: 'percentage' as const,
+          discountValue: 20,
+          minPurchaseAmount: 5000,
+          usageLimit: 500,
+          usedCount: 189,
+          expiryDate: new Date('2026-09-01T23:59:59Z'),
+          isActive: true,
+        },
+        {
+          code: 'VIP50',
+          discountType: 'percentage' as const,
+          discountValue: 50,
+          minPurchaseAmount: 20000,
+          usageLimit: 50,
+          usedCount: 50,
+          expiryDate: new Date('2026-08-01T23:59:59Z'),
+          isActive: false,
+        },
+      ];
+      coupons = await Coupon.insertMany(defaultCoupons);
+    }
+
     res.status(200).json({ success: true, data: { coupons } });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || 'Failed to fetch coupons' });
@@ -173,4 +210,33 @@ export const deleteCoupon = async (req: AuthenticatedRequest, res: Response): Pr
     res.status(500).json({ success: false, message: error.message || 'Failed to delete coupon' });
   }
 };
+
+export const toggleCouponStatus = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      res.status(403).json({ success: false, message: 'Admin access required' });
+      return;
+    }
+
+    const { id } = req.params;
+    const coupon = await Coupon.findById(id);
+
+    if (!coupon) {
+      res.status(404).json({ success: false, message: 'Coupon not found' });
+      return;
+    }
+
+    coupon.isActive = !coupon.isActive;
+    await coupon.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Coupon status changed to ${coupon.isActive ? 'active' : 'inactive'}`,
+      data: { coupon },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to toggle coupon status' });
+  }
+};
+
 

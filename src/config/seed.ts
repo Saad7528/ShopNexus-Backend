@@ -519,20 +519,20 @@ export async function seedDatabase() {
     await mongoose.connect(mongoUri);
     console.log('Connected to MongoDB for Seeding...');
 
-    // 1. Ensure Demo Admin exists
-    const adminEmail = 'admin@shopnexus.io';
+    // 1. Ensure Super Admin exists
+    const adminEmail = 'saad0174742@gmail.com';
     let adminUser = await User.findOne({ email: adminEmail });
     if (!adminUser) {
       const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash('Admin@ShopNexus2026!', salt);
+      const passwordHash = await bcrypt.hash('Saad@752800', salt);
       adminUser = await User.create({
-        name: 'Nexus Lead Admin',
+        name: 'S.M. Amirul Islam Saad',
         email: adminEmail,
         passwordHash,
         role: 'admin',
         isEmailVerified: true,
       });
-      console.log('Seeded Root Admin: admin@shopnexus.io / Admin@ShopNexus2026!');
+      console.log('Seeded Root Super Admin: saad0174742@gmail.com');
     }
 
     // 2. Ensure Verified Vendor exists

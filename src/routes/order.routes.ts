@@ -1,11 +1,14 @@
 import { Router } from 'express';
-import { requireAuth } from '../middlewares/auth.middleware';
-import { createOrder, getMyOrders, getOrderById } from '../controllers/order.controller';
+import { requireAuth, optionalAuth } from '../middlewares/auth.middleware';
+import { createOrder, getMyOrders, getOrderById, trackOrderPublic } from '../controllers/order.controller';
 
 const router = Router();
 
-router.post('/', requireAuth, createOrder);
+// Public Real-time Tracking Route (No login required)
+router.get('/track/:trackingNumber', trackOrderPublic);
+
+router.post('/', optionalAuth, createOrder);
 router.get('/my-orders', requireAuth, getMyOrders);
-router.get('/:id', requireAuth, getOrderById);
+router.get('/:id', optionalAuth, getOrderById);
 
 export default router;

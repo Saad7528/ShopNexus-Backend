@@ -19,18 +19,19 @@ export interface IShippingAddress {
 }
 
 export interface IOrder extends Document {
-  user: Types.ObjectId;
+  user?: Types.ObjectId;
   items: IOrderItem[];
   shippingAddress: IShippingAddress;
   paymentMethod: 'stripe_card' | 'mfs_bkash_nagad' | 'cash_on_delivery';
   paymentStatus: 'pending' | 'paid' | 'failed';
-  orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  orderStatus: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   subtotal: number;
   taxAmount: number;
   shippingFee: number;
   discountAmount: number;
   totalAmount: number;
   trackingNumber?: string;
+  courier?: string;
   estimatedDelivery?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -41,7 +42,7 @@ const OrderItemSchema = new Schema<IOrderItem>(
     product: {
       type: Schema.Types.ObjectId,
       ref: 'Product',
-      required: true,
+      required: false,
     },
     name: { type: String, required: true },
     price: { type: Number, required: true },
@@ -69,7 +70,7 @@ const OrderSchema = new Schema<IOrder>(
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
     },
     items: [OrderItemSchema],
     shippingAddress: { type: ShippingAddressSchema, required: true },
@@ -85,7 +86,7 @@ const OrderSchema = new Schema<IOrder>(
     },
     orderStatus: {
       type: String,
-      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+      enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
       default: 'pending',
     },
     subtotal: { type: Number, required: true },
@@ -94,6 +95,7 @@ const OrderSchema = new Schema<IOrder>(
     discountAmount: { type: Number, default: 0 },
     totalAmount: { type: Number, required: true },
     trackingNumber: { type: String },
+    courier: { type: String, default: 'Pathao Courier' },
     estimatedDelivery: { type: Date },
   },
   {
@@ -102,3 +104,4 @@ const OrderSchema = new Schema<IOrder>(
 );
 
 export const Order = model<IOrder>('Order', OrderSchema);
+
