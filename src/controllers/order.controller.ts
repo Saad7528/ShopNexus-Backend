@@ -140,7 +140,10 @@ export const trackOrderPublic = async (
   res: Response
 ): Promise<void> => {
   try {
-    const rawCode = (req.params.trackingNumber || '').trim();
+    const paramVal = Array.isArray(req.params.trackingNumber)
+      ? req.params.trackingNumber[0]
+      : req.params.trackingNumber;
+    const rawCode = String(paramVal || '').trim();
     if (!rawCode) {
       res.status(400).json({ success: false, message: 'Tracking number or Order ID is required' });
       return;
