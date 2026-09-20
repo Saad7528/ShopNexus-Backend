@@ -5,6 +5,7 @@
 </p>
 
 <p align="center">
+  <a href="https://shop-nexus-frontend-ten.vercel.app"><img src="https://img.shields.io/badge/Live_Website-ShopNexus-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Website" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-v18.18+-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" /></a>
   <a href="https://expressjs.com"><img src="https://img.shields.io/badge/Express.js-4.19-black?style=for-the-badge&logo=express&logoColor=white" alt="Express.js" /></a>
   <a href="https://www.mongodb.com/atlas"><img src="https://img.shields.io/badge/MongoDB-Atlas_M0-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB Atlas" /></a>
@@ -13,6 +14,7 @@
 </p>
 
 <p align="center">
+  <a href="https://shop-nexus-frontend-ten.vercel.app" target="_blank"><strong>🌐 Live Website</strong></a> •
   <a href="#-api-directory--endpoints"><strong>API Directory</strong></a> •
   <a href="#-security-architecture--rbac"><strong>Security & RBAC</strong></a> •
   <a href="#-getting-started--local-development"><strong>Quickstart</strong></a> •
@@ -36,6 +38,7 @@
 
 | Parameter | Value / Description |
 |---|---|
+| **🌐 Live Website** | **[`https://shop-nexus-frontend-ten.vercel.app`](https://shop-nexus-frontend-ten.vercel.app)** |
 | **Port** | `5000` (Default) |
 | **Super Admin Account** | `saad0174742@gmail.com` |
 | **Emergency 2FA Master Override** | **`752800`** |
