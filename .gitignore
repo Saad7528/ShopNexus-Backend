@@ -23,3 +23,6 @@ SETUP_REPORT_BN.md
 .agents/
 *.rules.md
 config.bat
+
+api.js
+director.js
